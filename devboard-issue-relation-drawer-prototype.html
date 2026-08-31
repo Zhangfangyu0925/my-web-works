@@ -1,0 +1,2528 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DevBoard Issue Relation Drawer Prototype</title>
+    <style>
+      :root {
+        --background: #f6f7f9;
+        --foreground: #1a1d23;
+        --muted: #edeff2;
+        --muted-foreground: #656b76;
+        --card: #ffffff;
+        --border: #dfe2e7;
+        --input: #dfe2e7;
+        --primary: #16a34a;
+        --primary-foreground: #ffffff;
+        --destructive: #ef4444;
+        --blue: #2563eb;
+        --green: #16a34a;
+        --amber: #d97706;
+        --rose: #e11d48;
+        --shadow: 0 14px 34px rgb(15 23 42 / 8%);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--background);
+        color: var(--foreground);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        font-size: 14px;
+        line-height: 1.45;
+      }
+
+      button,
+      input,
+      textarea {
+        font: inherit;
+      }
+
+      .app {
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: 232px minmax(0, 1fr);
+        background: var(--background);
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .sidebar {
+        border-right: 1px solid var(--border);
+        background: var(--card);
+        padding: 16px 12px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 8px 18px;
+        font-weight: 700;
+      }
+
+      .brand-mark {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        background: linear-gradient(180deg, #1db954, #149647);
+        color: var(--primary-foreground);
+        display: grid;
+        place-items: center;
+        font-size: 13px;
+      }
+
+      .nav-item {
+        height: 34px;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 0 10px;
+        border-radius: 9px;
+        color: #4f5663;
+        margin-bottom: 4px;
+      }
+
+      .nav-item.active {
+        background: #ecf8ef;
+        border: 1px solid rgb(22 163 74 / 10%);
+        color: var(--foreground);
+        font-weight: 600;
+      }
+
+      .main {
+        min-width: 0;
+        padding: 16px;
+      }
+
+      .page-header {
+        border: 1px solid var(--border);
+        background: var(--card);
+        border-radius: 16px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
+      }
+
+      .page-title {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 600;
+        letter-spacing: 0;
+      }
+
+      .page-description {
+        margin-top: 4px;
+        color: var(--muted-foreground);
+        font-size: 13px;
+      }
+
+      .button {
+        border: 1px solid var(--border);
+        background: var(--card);
+        height: 34px;
+        border-radius: 9px;
+        padding: 0 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        cursor: pointer;
+        color: var(--foreground);
+        font-weight: 500;
+        text-decoration: none;
+      }
+
+      .page-header,
+      .detail-topbar,
+      .detail-actions {
+        position: relative;
+        z-index: 1;
+      }
+
+      .button.primary {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: var(--primary-foreground);
+      }
+
+      .button.ghost {
+        background: transparent;
+      }
+
+      .table-card {
+        margin-top: 16px;
+        border: 1px solid var(--border);
+        background: var(--card);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 1px 2px rgb(0 0 0 / 4%);
+      }
+
+      .workspace {
+        margin-top: 16px;
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+        gap: 16px;
+        align-items: start;
+      }
+
+      .list-view.hidden,
+      .page-header.hidden,
+      .detail-view.hidden,
+      .drawer.hidden,
+      .overlay.hidden {
+        display: none;
+      }
+
+      .detail-view {
+        margin-top: 16px;
+      }
+
+      .detail-topbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted-foreground);
+        font-size: 13px;
+        margin-bottom: 16px;
+      }
+
+      .detail-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 336px;
+        gap: 16px;
+        align-items: start;
+      }
+
+      .detail-main {
+        display: grid;
+        gap: 16px;
+      }
+
+      .detail-aside {
+        display: grid;
+        gap: 16px;
+        position: sticky;
+        top: 24px;
+      }
+
+      .detail-card {
+        border: 1px solid var(--border);
+        background: var(--card);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 1px 2px rgb(0 0 0 / 4%);
+      }
+
+      .detail-header {
+        padding: 16px 18px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .detail-eyebrow {
+        color: var(--muted-foreground);
+        font-size: 12px;
+      }
+
+      .detail-title {
+        margin: 3px 0 0;
+        font-size: 20px;
+        line-height: 1.25;
+      }
+
+      .detail-body {
+        padding: 18px;
+      }
+
+      .issue-hero {
+        overflow: hidden;
+      }
+
+      .issue-hero-top {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .issue-hero-main {
+        min-width: 0;
+      }
+
+      .issue-hero-tags {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+
+      .issue-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .issue-hero-title {
+        margin: 0;
+        font-size: 28px;
+        line-height: 1.2;
+        letter-spacing: 0;
+      }
+
+      .issue-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        min-width: 336px;
+      }
+
+      .issue-meta-item {
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: #f8fafb;
+      }
+
+      .issue-meta-label {
+        color: var(--muted-foreground);
+        font-size: 12px;
+        font-weight: 650;
+        margin-bottom: 6px;
+      }
+
+      .issue-meta-value {
+        font-weight: 600;
+        min-width: 0;
+      }
+
+      .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .detail-field {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        background: #fff;
+      }
+
+      .detail-field-label {
+        font-size: 12px;
+        color: var(--muted-foreground);
+        margin-bottom: 6px;
+        font-weight: 650;
+      }
+
+      .detail-field-value {
+        min-width: 0;
+        font-weight: 600;
+      }
+
+      .detail-section {
+        border-top: 1px solid var(--border);
+        padding-top: 16px;
+        margin-top: 16px;
+      }
+
+      .detail-section:first-of-type {
+        border-top: 0;
+        padding-top: 0;
+        margin-top: 0;
+      }
+
+      .detail-section-title {
+        margin-bottom: 12px;
+        font-weight: 700;
+      }
+
+      .relation-group {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: #fff;
+        margin-bottom: 10px;
+        padding: 12px;
+      }
+
+      .relation-group-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 8px;
+      }
+
+      .relation-group-title {
+        font-weight: 700;
+      }
+
+      .relation-group-items {
+        display: grid;
+        gap: 8px;
+      }
+
+      .relation-item {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        border: 1px solid var(--border);
+        background: #f8fafb;
+        border-radius: 10px;
+        padding: 10px 12px;
+        transition:
+          border-color 0.12s ease,
+          background-color 0.12s ease;
+      }
+
+      .relation-item:hover,
+      .relation-item:focus-within {
+        border-color: #cfd8d3;
+        background: #f2f8f4;
+      }
+
+      .relation-item-main {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .relation-item-key {
+        flex: 0 0 auto;
+      }
+
+      .relation-item-text {
+        min-width: 0;
+        display: grid;
+        gap: 2px;
+      }
+
+      .relation-item-title {
+        min-width: 0;
+        font-weight: 600;
+      }
+
+      .relation-item-subtitle {
+        color: var(--muted-foreground);
+        font-size: 12px;
+      }
+
+      .relation-status {
+        justify-self: start;
+      }
+
+      .relation-remove {
+        width: 22px;
+        height: 22px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: var(--muted-foreground);
+        padding: 0;
+        cursor: pointer;
+        opacity: 0;
+        transition:
+          opacity 0.12s ease,
+          background-color 0.12s ease,
+          color 0.12s ease;
+      }
+
+      .relation-item:hover .relation-remove,
+      .relation-item:focus-within .relation-remove {
+        opacity: 1;
+      }
+
+      .relation-remove:hover {
+        background: #dfe7e1;
+        color: var(--foreground);
+      }
+
+      .detail-actions {
+        display: grid;
+        gap: 10px;
+      }
+
+      .detail-actions .button {
+        width: 100%;
+      }
+
+      .detail-info-grid {
+        display: grid;
+        gap: 14px;
+      }
+
+      .plan-card {
+        position: relative;
+        overflow: visible;
+      }
+
+      .plan-card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .plan-card-title {
+        font-weight: 700;
+      }
+
+      .plan-card-body {
+        position: relative;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: #f8fafb;
+        padding: 12px;
+        display: grid;
+        gap: 8px;
+      }
+
+      .plan-card-empty {
+        color: var(--muted-foreground);
+        font-size: 12px;
+      }
+
+      .plan-card-item {
+        display: grid;
+        gap: 4px;
+      }
+
+      .plan-card-item-top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .plan-card-item-key {
+        flex: 0 0 auto;
+      }
+
+      .plan-card-item-title {
+        min-width: 0;
+        font-weight: 600;
+      }
+
+      .plan-card-item-subtitle {
+        color: var(--muted-foreground);
+        font-size: 12px;
+      }
+
+      .plan-card-actions {
+        display: flex;
+        gap: 8px;
+        position: absolute;
+        right: 10px;
+        top: 10px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.12s ease;
+      }
+
+      .plan-card:hover .plan-card-actions,
+      .plan-card:focus-within .plan-card-actions {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .plan-card-action {
+        height: 24px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 0 8px;
+        background: #fff;
+        color: var(--foreground);
+        font-size: 12px;
+      }
+
+      .plan-card-action.danger {
+        color: var(--destructive);
+      }
+
+      .plan-popover-inline {
+        position: static;
+        margin-top: 8px;
+        max-height: 250px;
+        overflow-y: auto;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--card);
+        box-shadow: 0 12px 28px rgb(15 23 42 / 10%);
+      }
+
+      .plan-select-wrap {
+        position: relative;
+        min-width: 0;
+      }
+
+      .plan-select-wrap:hover .select-clear,
+      .plan-select-wrap:focus-within .select-clear {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .select-clear {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        width: 22px;
+        height: 22px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: #fff;
+        color: var(--muted-foreground);
+        display: grid;
+        place-items: center;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(-50%);
+        transition: opacity 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+        z-index: 1;
+      }
+
+      .select-clear:hover {
+        color: var(--foreground);
+        border-color: #cfd8d3;
+      }
+
+      .plan-popover {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(100% + 8px);
+        z-index: 40;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--card);
+        box-shadow: 0 12px 28px rgb(15 23 42 / 10%);
+        overflow: hidden;
+      }
+
+      .detail-info-block {
+        display: grid;
+        gap: 10px;
+      }
+
+      .detail-info-title {
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .detail-info-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .timeline {
+        display: grid;
+        gap: 10px;
+      }
+
+      .timeline-item {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+      }
+
+      .timeline-dot {
+        width: 8px;
+        height: 8px;
+        margin-top: 6px;
+        border-radius: 999px;
+        background: var(--input);
+        flex: 0 0 auto;
+      }
+
+      .timeline-content {
+        min-width: 0;
+        color: #3f4652;
+      }
+
+      .toolbar {
+        padding: 14px;
+        display: flex;
+        gap: 10px;
+        border-bottom: 1px solid var(--border);
+        background: #fcfcfd;
+      }
+
+      .search {
+        height: 34px;
+        border: 1px solid var(--input);
+        border-radius: 9px;
+        background: var(--muted);
+        padding: 0 12px;
+        color: var(--muted-foreground);
+        flex: 1;
+        display: flex;
+        align-items: center;
+      }
+
+      .issue-row {
+        min-height: 66px;
+        display: grid;
+        grid-template-columns: 118px minmax(0, 1fr) 110px 126px;
+        gap: 14px;
+        align-items: center;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+      }
+
+      .issue-row:last-child {
+        border-bottom: 0;
+      }
+
+      .issue-row:hover,
+      .issue-row.active {
+        background: #edf8ef;
+      }
+
+      .mono {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      }
+
+      .muted {
+        color: var(--muted-foreground);
+      }
+
+      .truncate {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 24px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 2px 9px;
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+        background: #fff;
+      }
+
+      .badge.blue {
+        border-color: rgb(37 99 235 / 32%);
+        background: rgb(37 99 235 / 9%);
+        color: var(--blue);
+      }
+
+      .badge.green {
+        border-color: rgb(22 163 74 / 32%);
+        background: rgb(22 163 74 / 9%);
+        color: var(--green);
+      }
+
+      .badge.amber {
+        border-color: rgb(217 119 6 / 32%);
+        background: rgb(217 119 6 / 9%);
+        color: var(--amber);
+      }
+
+      .badge.rose {
+        border-color: rgb(225 29 72 / 30%);
+        background: rgb(225 29 72 / 8%);
+        color: var(--rose);
+      }
+
+      .overlay {
+        position: fixed;
+        inset: 0;
+        background: rgb(15 23 42 / 14%);
+        z-index: 40;
+      }
+
+      .drawer {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: min(920px, calc(100vw - 24px));
+        height: 100vh;
+        background: var(--card);
+        border-left: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        display: flex;
+        flex-direction: column;
+        z-index: 50;
+      }
+
+      .drawer-header {
+        min-height: 72px;
+        border-bottom: 1px solid var(--border);
+        padding: 14px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        background: #fff;
+      }
+
+      .drawer-title {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: 0;
+      }
+
+      .drawer-subtitle {
+        margin-top: 3px;
+        color: var(--muted-foreground);
+        font-size: 12px;
+      }
+
+      .segmented {
+        display: inline-flex;
+        border: 1px solid var(--border);
+        background: var(--muted);
+        border-radius: 10px;
+        padding: 3px;
+        gap: 3px;
+      }
+
+      .segment {
+        height: 30px;
+        border: 0;
+        border-radius: 8px;
+        padding: 0 10px;
+        background: transparent;
+        color: var(--muted-foreground);
+      }
+
+      .segment.active {
+        background: var(--card);
+        color: var(--foreground);
+        box-shadow: 0 1px 2px rgb(0 0 0 / 6%);
+        font-weight: 600;
+      }
+
+      .drawer-body {
+        min-height: 0;
+        flex: 1;
+        overflow-y: auto;
+        padding: 18px 20px 92px;
+        background: var(--background);
+      }
+
+      .drawer-footer {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border-top: 1px solid var(--border);
+        background: rgb(255 255 255 / 94%);
+        backdrop-filter: blur(8px);
+        padding: 14px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+
+      .section {
+        padding: 0 0 16px;
+        margin-bottom: 16px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .section:last-child {
+        border-bottom: 0;
+      }
+
+      .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+
+      .section-title {
+        font-weight: 700;
+      }
+
+      .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .grid-2 {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 12px;
+      }
+
+      .field {
+        min-width: 0;
+      }
+
+      .label {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin-bottom: 6px;
+        color: #4f5663;
+        font-size: 12px;
+        font-weight: 650;
+      }
+
+      .required {
+        color: var(--destructive);
+      }
+
+      .control {
+        min-height: 40px;
+        width: 100%;
+        border: 1px solid var(--input);
+        border-radius: 10px;
+        background: var(--card);
+        padding: 8px 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--foreground);
+      }
+
+      .control.readonly {
+        background: #f3f4f6;
+        color: #4f5663;
+        user-select: none;
+      }
+
+      .control.input-like {
+        justify-content: space-between;
+        cursor: pointer;
+      }
+
+      .title-input {
+        height: 40px;
+        border: 1px solid var(--input);
+        border-radius: 10px;
+        padding: 0 12px;
+        width: 100%;
+        background: var(--card);
+      }
+
+      .textarea {
+        height: 214px;
+        border: 1px solid var(--input);
+        border-radius: 10px;
+        padding: 12px;
+        resize: none;
+        width: 100%;
+        color: #3f4652;
+        background: var(--card);
+      }
+
+      .chevron {
+        color: var(--muted-foreground);
+        margin-left: auto;
+      }
+
+      .relation-panel {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 1px 2px rgb(0 0 0 / 4%);
+      }
+
+      .relation-row {
+        display: grid;
+        grid-template-columns: 132px minmax(0, 1fr);
+        gap: 12px;
+        padding: 12px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .relation-row:last-child {
+        border-bottom: 0;
+      }
+
+      .relation-name {
+        min-width: 0;
+      }
+
+      .relation-title {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-weight: 700;
+      }
+
+      .relation-hint {
+        margin-top: 4px;
+        color: var(--muted-foreground);
+        font-size: 12px;
+      }
+
+      .relation-main {
+        min-width: 0;
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+        margin-top: 8px;
+      }
+
+      .chip {
+        max-width: 100%;
+        min-height: 28px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: #f8fafb;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 3px 8px 3px 10px;
+        font-size: 12px;
+      }
+
+      .chip .x {
+        width: 18px;
+        height: 18px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: var(--muted-foreground);
+        padding: 0;
+      }
+
+      .dropdown {
+        margin-top: 8px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--card);
+        overflow: hidden;
+        box-shadow: 0 12px 24px rgb(15 23 42 / 8%);
+      }
+
+      .option {
+        min-height: 46px;
+        display: grid;
+        grid-template-columns: 18px 106px minmax(0, 1fr) 76px 82px;
+        gap: 8px;
+        align-items: center;
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .option:last-child {
+        border-bottom: 0;
+      }
+
+      .check {
+        width: 16px;
+        height: 16px;
+        border: 1px solid var(--input);
+        border-radius: 4px;
+        display: grid;
+        place-items: center;
+        font-size: 11px;
+        color: var(--primary-foreground);
+      }
+
+      .check.on {
+        background: var(--primary);
+        border-color: var(--primary);
+      }
+
+      .status {
+        justify-self: start;
+      }
+
+      .note-line {
+        margin-top: 8px;
+        color: var(--muted-foreground);
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .tag-picker {
+        min-height: 42px;
+        border: 1px solid var(--input);
+        border-radius: 9px;
+        padding: 7px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .mini-tag {
+        border-radius: 7px;
+        border: 1px solid currentColor;
+        background: color-mix(in srgb, currentColor 10%, white);
+        padding: 3px 7px;
+        font-size: 12px;
+        font-weight: 650;
+      }
+
+      .select-placeholder {
+        color: var(--muted-foreground);
+        font-size: 13px;
+      }
+
+      .relation-builder {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: end;
+      }
+
+      .select-box {
+        min-height: 40px;
+        border: 1px solid var(--input);
+        border-radius: 10px;
+        background: var(--card);
+        padding: 8px 34px 8px 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        cursor: pointer;
+        appearance: none;
+        -webkit-appearance: none;
+        text-align: left;
+      }
+
+      .select-box.readonly {
+        background: #f3f4f6;
+      }
+
+      .select-box.with-clear {
+        padding-right: 70px;
+        position: relative;
+      }
+
+      .select-title {
+        display: block;
+        font-size: 12px;
+        color: var(--muted-foreground);
+        margin-bottom: 6px;
+        font-weight: 650;
+      }
+
+      .field-stack {
+        min-width: 0;
+        position: relative;
+      }
+
+      .relation-selected {
+        margin-top: 12px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .relation-selected-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        color: var(--muted-foreground);
+        font-size: 12px;
+      }
+
+      .popover {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(100% + 8px);
+        z-index: 30;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--card);
+        box-shadow: 0 12px 28px rgb(15 23 42 / 10%);
+        overflow: hidden;
+      }
+
+      .popover.hidden {
+        display: none;
+      }
+
+      .popover-head {
+        padding: 10px;
+        border-bottom: 1px solid var(--border);
+        background: #fcfcfd;
+      }
+
+      .popover-search {
+        width: 100%;
+        height: 34px;
+        border: 1px solid var(--input);
+        border-radius: 9px;
+        padding: 0 10px;
+        background: var(--card);
+        outline: none;
+      }
+
+      .popover-list {
+        max-height: 240px;
+        overflow-y: auto;
+      }
+
+      .popover-item {
+        width: 100%;
+        border: 0;
+        background: transparent;
+        padding: 10px 12px;
+        display: grid;
+        gap: 4px;
+        text-align: left;
+        cursor: pointer;
+        border-bottom: 1px solid var(--border);
+        position: relative;
+      }
+
+      .popover-item:last-child {
+        border-bottom: 0;
+      }
+
+      .popover-item:hover,
+      .popover-item.active {
+        background: #f3faf5;
+      }
+
+      .popover-item-main {
+        width: 100%;
+        border: 0;
+        background: transparent;
+        padding: 0;
+        display: grid;
+        gap: 4px;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .popover-item-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .popover-item-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .popover-item-key {
+        flex: 0 0 auto;
+      }
+
+      .popover-item-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        color: var(--muted-foreground);
+        font-size: 12px;
+      }
+
+      .popover-empty {
+        padding: 16px 12px;
+        color: var(--muted-foreground);
+        font-size: 12px;
+      }
+
+      .supplement-row {
+        padding: 10px 12px 12px;
+        border-top: 1px solid var(--border);
+        background: #fcfcfd;
+      }
+
+      .supplement-textarea {
+        width: 100%;
+        min-height: 68px;
+        border: 1px solid var(--input);
+        border-radius: 10px;
+        padding: 8px 10px;
+        resize: vertical;
+        background: var(--card);
+      }
+
+      .selected-relation {
+        margin-top: 12px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        background: #f8fafb;
+        display: grid;
+        gap: 10px;
+      }
+
+      .selected-relation-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .selected-relation-title {
+        font-weight: 700;
+      }
+
+      .selected-relation-form {
+        display: grid;
+        gap: 8px;
+      }
+
+      .selected-relation-label {
+        font-size: 12px;
+        color: var(--muted-foreground);
+        font-weight: 650;
+      }
+
+      .selected-relation-input {
+        min-height: 40px;
+        border: 1px solid var(--input);
+        border-radius: 10px;
+        background: var(--card);
+        padding: 8px 10px;
+      }
+
+      @media (max-width: 760px) {
+        html,
+        body {
+          overflow-x: hidden;
+        }
+
+        .app {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          display: none;
+        }
+
+        .main {
+          padding: 12px;
+        }
+
+        .workspace {
+          grid-template-columns: 1fr;
+        }
+
+        .detail-layout,
+        .issue-meta-grid {
+          grid-template-columns: 1fr;
+          min-width: 0;
+        }
+
+        .detail-aside {
+          position: static;
+        }
+
+        .drawer {
+          left: 0;
+          right: auto;
+          width: 100vw;
+          max-width: 100vw;
+        }
+
+        .drawer-header {
+          align-items: stretch;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .drawer-header > div:last-child {
+          justify-content: space-between;
+        }
+
+        .drawer-body {
+          padding: 16px 20px 96px;
+        }
+
+        .drawer-footer {
+          flex-direction: column-reverse;
+          justify-content: stretch;
+          align-items: stretch;
+        }
+
+        .drawer-footer .button {
+          width: auto;
+          flex: none;
+          min-width: 0;
+        }
+
+        .detail-grid,
+        .grid-3,
+        .grid-2,
+        .relation-builder,
+        .plan-switcher-row {
+          grid-template-columns: 1fr;
+        }
+
+        .option {
+          grid-template-columns: 18px 98px minmax(0, 1fr);
+        }
+
+        .plan-switcher-toggle {
+          width: 100%;
+        }
+
+        .option .status,
+        .option .owner {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">D</div>
+          <div>DevBoard</div>
+        </div>
+        <div class="nav-item">产品文档</div>
+        <div class="nav-item active">Issue</div>
+        <div class="nav-item">Plan</div>
+        <div class="nav-item">Task</div>
+        <div class="nav-item">Release</div>
+        <div class="nav-item">设置</div>
+      </aside>
+
+      <main class="main">
+        <section class="page-header" id="page-header">
+          <div>
+            <h1 class="page-title">Issue</h1>
+            <div class="page-description">Devboard · 全部状态 · 最近更新优先</div>
+          </div>
+          <a class="button primary" id="open-create" href="#create">+ 新建 Issue</a>
+        </section>
+
+        <section class="list-view" id="list-view">
+          <section class="table-card">
+            <div class="toolbar">
+              <div class="search">搜索 Issue key / 标题 / 负责人</div>
+              <button class="button">状态</button>
+              <button class="button">标签</button>
+            </div>
+            <div style="padding: 10px 16px; border-bottom: 1px solid var(--border); color: var(--muted-foreground); font-size: 12px">
+              点击任意 Issue 打开详情页
+            </div>
+            <div class="issue-row active" data-issue="DEVBOARD-387">
+              <div class="mono">DEVBOARD-387</div>
+              <div class="truncate">issue 标签选择交互优化</div>
+              <span class="badge amber">Todo</span>
+              <div class="muted truncate">fangyu.zhang</div>
+            </div>
+            <div class="issue-row" data-issue="DEVBOARD-386">
+              <div class="mono">DEVBOARD-386</div>
+              <div class="truncate">Issue 新建与编辑表单交互优化</div>
+              <span class="badge blue">In Progress</span>
+              <div class="muted truncate">kaiyu.wang</div>
+            </div>
+            <div class="issue-row" data-issue="DEVBOARD-384">
+              <div class="mono">DEVBOARD-384</div>
+              <div class="truncate">Plan 详情页评审入口收敛</div>
+              <span class="badge green">Done</span>
+              <div class="muted truncate">san.zhang</div>
+            </div>
+          </section>
+        </section>
+
+        <section class="detail-view hidden" id="detail-view">
+          <div class="detail-topbar">
+            <a class="button" id="back-to-list" href="#list">返回列表</a>
+            <span class="truncate" id="detail-breadcrumb">Devboard / Issue</span>
+          </div>
+
+          <div class="detail-layout">
+            <div class="detail-main">
+              <section class="detail-card issue-hero">
+                <div class="detail-body">
+                  <div class="issue-hero-top">
+                    <div class="issue-hero-main">
+                      <div class="issue-hero-tags">
+                        <span class="badge amber" id="detail-status">Todo</span>
+                        <span class="badge" id="detail-key-chip">issue_key: DEVBOARD-387</span>
+                      </div>
+                      <h1 class="issue-hero-title" id="detail-title">issue 标签选择交互优化</h1>
+                    </div>
+                    <div class="issue-meta-grid">
+                      <div class="issue-meta-item">
+                        <div class="issue-meta-label">创建人</div>
+                        <div class="issue-meta-value" id="detail-creator">fangyu.zhang</div>
+                      </div>
+                      <div class="issue-meta-item">
+                        <div class="issue-meta-label">创建于</div>
+                        <div class="issue-meta-value" id="detail-created">2026-08-27 14:47</div>
+                      </div>
+                      <div class="issue-meta-item">
+                        <div class="issue-meta-label">更新于</div>
+                        <div class="issue-meta-value" id="detail-updated">2026-08-27 17:34</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="detail-card">
+                <div class="detail-body">
+                  <div class="detail-section-title">正文</div>
+                  <div class="markdown-preview" id="detail-description">
+                    <p>新建 / 编辑 Issue 时，标签选择器的交互需要更贴近详情页的关联关系管理方式，同时压缩页面承载。</p>
+                  </div>
+                </div>
+              </section>
+
+              <section class="detail-card">
+                <div class="detail-body">
+                  <div class="section-header">
+                    <div class="section-title">关联 Issue</div>
+                    <span class="badge">支持删除</span>
+                  </div>
+                  <div id="detail-relations"></div>
+                </div>
+              </section>
+
+              <section class="detail-card">
+                <div class="detail-body">
+                  <div class="section-header">
+                    <div class="section-title">最近动态</div>
+                  </div>
+                  <div class="timeline" id="detail-history"></div>
+                </div>
+              </section>
+
+              <section class="detail-card">
+                <div class="detail-body">
+                  <div class="section-header">
+                    <div class="section-title">评论</div>
+                  </div>
+                  <div class="muted">暂无评论</div>
+                </div>
+              </section>
+            </div>
+
+            <aside class="detail-aside">
+              <section class="detail-card">
+                <div class="detail-body">
+                  <div class="detail-actions">
+                    <div class="section-title">操作</div>
+                    <a class="button primary" id="open-edit" href="#edit">编辑 Issue</a>
+                    <button class="button">关联 Plan 规划</button>
+                    <button class="button">关联新建 Task</button>
+                    <button class="button">删除 Issue</button>
+                  </div>
+                </div>
+              </section>
+
+              <section class="detail-card plan-card" id="detail-plan-card">
+                <div class="detail-body">
+                  <div class="plan-card-head">
+                    <div class="detail-info-title">关联 Plan</div>
+                    <span class="badge" id="detail-plan-count">1</span>
+                  </div>
+                  <div class="plan-card-body" id="detail-plan-body">
+                    <div class="plan-card-item" id="detail-plan-item">
+                      <div class="plan-card-item-top">
+                        <span class="mono plan-card-item-key" id="detail-plan-key">PL-101</span>
+                      </div>
+                      <div class="plan-card-item-title truncate" id="detail-plan-title">关联关系与标签交互二期</div>
+                      <div class="plan-card-item-subtitle" id="detail-plan-owner">负责人: san.zhang</div>
+                    </div>
+                    <div class="plan-card-empty hidden" id="detail-plan-empty">未关联 Plan</div>
+                    <div class="plan-card-actions">
+                      <button class="plan-card-action danger" type="button" id="detail-plan-clear">取消</button>
+                      <button class="plan-card-action" type="button" id="detail-plan-switch">切换</button>
+                    </div>
+                    <div class="popover plan-popover-inline hidden" id="detail-plan-popover" aria-label="关联 Plan 下拉">
+                      <div class="popover-list" id="detail-plan-list"></div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="detail-card">
+                <div class="detail-body">
+                  <div class="detail-info-block">
+                    <div class="detail-info-title">Issue 信息</div>
+                    <div class="detail-info-grid">
+                      <div class="detail-info-row">
+                        <span class="muted">issue_key</span>
+                        <span class="mono" id="detail-issue-key">DEVBOARD-387</span>
+                      </div>
+                      <div class="detail-info-row">
+                        <span class="muted">所属产品</span>
+                        <span id="detail-product">Devboard</span>
+                      </div>
+                      <div class="detail-info-row">
+                        <span class="muted">负责人</span>
+                        <span id="detail-owner">fangyu.zhang</span>
+                      </div>
+                      <div class="detail-info-row">
+                        <span class="muted">状态</span>
+                        <span class="badge amber" id="detail-status-pill">Todo</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </aside>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="overlay hidden" id="overlay"></div>
+
+    <aside class="drawer hidden" aria-label="Issue drawer" id="drawer">
+      <header class="drawer-header">
+        <div>
+          <h2 class="drawer-title" id="drawer-title">新建 Issue</h2>
+          <div class="drawer-subtitle" id="drawer-subtitle">Devboard / Issue</div>
+        </div>
+        <button class="button ghost" id="close-drawer" aria-label="关闭">×</button>
+      </header>
+
+      <div class="drawer-body">
+        <section class="section">
+          <div class="grid-3">
+            <div class="field">
+              <label class="label">产品名称 <span class="required">*</span></label>
+              <div class="control input-like">
+                <span id="drawer-product">Devboard</span>
+                <span class="chevron">⌄</span>
+              </div>
+            </div>
+            <div class="field">
+              <label class="label">Issue Key</label>
+              <div class="control readonly mono" id="drawer-issue-key">DEVBOARD-388</div>
+            </div>
+            <div class="field">
+              <label class="label">负责人</label>
+              <div class="control input-like">
+                <span id="drawer-owner">fangyu.zhang</span>
+                <span class="chevron">⌄</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="field">
+            <label class="label">标题 <span class="required">*</span></label>
+            <input class="title-input" id="drawer-title-input" value="Issue 新建与编辑表单支持完整关联关系" />
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="field">
+            <label class="label">Issue 标签</label>
+            <div class="tag-picker" id="drawer-tags">
+              <span class="mini-tag" style="color: #2563eb">需求</span>
+              <span class="mini-tag" style="color: #16a34a">交互优化</span>
+              <span class="select-placeholder">+ 添加标签</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="field">
+            <label class="label">正文</label>
+            <textarea class="textarea" id="drawer-description">## 背景
+新建和编辑 Issue 时需要同时维护结构化内容和关联关系。
+
+## 目标
+在不增加页面跳转的情况下完成父子、阻塞关系配置。</textarea>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-header">
+            <div class="section-title">关联 Plan</div>
+            <span class="badge">单选</span>
+          </div>
+          <div class="field-stack" id="drawer-plan-field">
+            <label class="select-title">关联 Plan</label>
+            <div class="plan-select-wrap">
+              <div class="select-box with-clear" id="drawer-plan-select" role="button" tabindex="0">
+                <span class="select-placeholder" id="drawer-plan-text">选择关联 Plan</span>
+                <span class="chevron">⌄</span>
+                <button class="select-clear hidden" id="drawer-plan-clear" type="button" aria-label="取消关联 Plan">×</button>
+              </div>
+            </div>
+            <div class="popover hidden" id="drawer-plan-popover" aria-label="关联 Plan 下拉">
+              <div class="popover-list" id="drawer-plan-list"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-header">
+            <div class="section-title">关联 Issue</div>
+            <span class="badge">两级选择</span>
+          </div>
+
+          <div class="relation-builder">
+            <div class="field-stack">
+              <label class="select-title">关联关系</label>
+              <button class="select-box" id="drawer-relation-type" type="button">
+                <span id="drawer-relation-type-text">父 Issue</span>
+                <span class="chevron">⌄</span>
+              </button>
+              <div class="popover hidden" id="relation-type-popover" aria-label="关联关系下拉">
+                <div class="popover-list" id="relation-type-list"></div>
+              </div>
+            </div>
+            <div class="field-stack">
+              <label class="select-title">关联 Issue</label>
+              <button class="select-box" id="drawer-relation-target" type="button">
+                <span class="select-placeholder" id="drawer-relation-target-text">搜索 Issue key / 标题</span>
+                <span class="chevron">⌄</span>
+              </button>
+              <div class="popover hidden" id="relation-target-popover" aria-label="关联 Issue 下拉">
+                <div class="popover-head">
+                  <input class="popover-search" id="relation-target-search" type="text" placeholder="搜索 Issue key / 标题 / 负责人" />
+                </div>
+                <div class="popover-list" id="relation-target-list"></div>
+              </div>
+            </div>
+            <button class="button primary" id="drawer-add-relation">添加</button>
+          </div>
+
+          <div class="selected-relation hidden" id="drawer-selected-relation">
+            <div class="selected-relation-head">
+              <div class="selected-relation-title">当前待添加</div>
+              <span class="badge" id="drawer-relation-state">父 Issue · 未选择 Issue</span>
+            </div>
+            <div class="selected-relation-form">
+              <div>
+                <div class="selected-relation-label">已选关联 Issue</div>
+                <div class="selected-relation-input" id="drawer-selected-target">未选择</div>
+              </div>
+              <div>
+                <div class="selected-relation-label">补充信息</div>
+                <textarea class="supplement-textarea" id="drawer-relation-note" placeholder="例如：关联原因、补充约束、备注说明"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="relation-selected">
+            <div class="relation-selected-head">
+              <span>已选关联</span>
+              <span class="muted" id="drawer-relation-summary">父 Issue 1 · 子 Issue 2 · Blocks 1 · Blocked by 1</span>
+            </div>
+            <div id="drawer-relation-groups"></div>
+          </div>
+        </section>
+      </div>
+
+      <footer class="drawer-footer">
+        <button class="button" id="drawer-cancel">取消</button>
+        <button class="button primary" id="drawer-save">创建 Issue</button>
+      </footer>
+    </aside>
+
+    <script>
+      const issues = {
+        'DEVBOARD-387': {
+          key: 'DEVBOARD-387',
+          title: 'issue 标签选择交互优化',
+          status: 'Todo',
+          owner: 'fangyu.zhang',
+          product: 'Devboard',
+          creator: 'fangyu.zhang',
+          created_at: '2026-08-27 14:47',
+          updated_at: '2026-08-27 17:34',
+          tags: [
+            { name: '需求', color: '#2563eb' },
+            { name: '体验优化', color: '#16a34a' },
+          ],
+          description:
+            '新建 / 编辑 Issue 时，标签选择器的交互需要更贴近详情页的关联关系管理方式，同时压缩页面承载。',
+          plan: { key: 'PL-101', title: '关联关系与标签交互二期', owner: 'san.zhang' },
+          relationSummary: '父 Issue 1 · 子 Issue 2 · Blocks 1 · Blocked by 1',
+          relations: [
+            {
+              title: '父 Issue',
+              count: 1,
+              items: [{ key: 'DEVBOARD-320', title: 'Issue 体系升级', status: 'In Progress' }],
+            },
+            {
+              title: '子 Issue',
+              count: 2,
+              items: [
+                { key: 'DEVBOARD-389', title: '关联关系下拉搜索组件抽取', status: 'Todo' },
+                { key: 'DEVBOARD-391', title: '编辑抽屉批量保存关系', status: 'Review' },
+              ],
+            },
+            {
+              title: 'Blocks',
+              count: 1,
+              items: [{ key: 'DEVBOARD-366', title: '状态流转门禁补齐', status: 'Todo' }],
+            },
+            {
+              title: 'Blocked by',
+              count: 1,
+              items: [{ key: 'DEVBOARD-361', title: 'Issue 详情关联关系卡片收敛', status: 'Review' }],
+            },
+          ],
+          history: [
+            '2026-08-27 · 张芳语 · 更新了需求正文与关联关系说明',
+            '2026-08-27 · 张芳语 · 将原型地址补充到 issue 正文',
+          ],
+          issueKeyPrefix: 'DEVBOARD-',
+        },
+        'DEVBOARD-386': {
+          key: 'DEVBOARD-386',
+          title: 'Issue 新建与编辑表单交互优化',
+          status: 'In Progress',
+          owner: 'kaiyu.wang',
+          product: 'Devboard',
+          creator: 'kaiyu.wang',
+          created_at: '2026-08-26 10:12',
+          updated_at: '2026-08-27 11:20',
+          tags: [{ name: '交互', color: '#2563eb' }],
+          description: '新建和编辑抽屉需要拆分交互入口，并把正文与关联关系整理成更轻的布局。',
+          plan: { key: 'PL-102', title: 'Issue 新建与编辑表单优化', owner: 'kaiyu.wang' },
+          relationSummary: '父 Issue 1 · 子 Issue 1 · Blocks 0 · Blocked by 0',
+          relations: [
+            {
+              title: '父 Issue',
+              count: 1,
+              items: [{ key: 'DEVBOARD-320', title: 'Issue 体系升级', status: 'In Progress' }],
+            },
+            {
+              title: '子 Issue',
+              count: 1,
+              items: [{ key: 'DEVBOARD-387', title: 'issue 标签选择交互优化', status: 'Todo' }],
+            },
+          ],
+          history: ['2026-08-26 · kaiyu.wang · 进入设计评审'],
+          issueKeyPrefix: 'DEVBOARD-',
+        },
+        'DEVBOARD-384': {
+          key: 'DEVBOARD-384',
+          title: 'Plan 详情页评审入口收敛',
+          status: 'Done',
+          owner: 'san.zhang',
+          product: 'Devboard',
+          creator: 'san.zhang',
+          created_at: '2026-08-25 09:22',
+          updated_at: '2026-08-25 18:05',
+          tags: [{ name: '收敛', color: '#16a34a' }],
+          description: '计划页和 Issue 详情页的操作入口进行收束，减少重复信息。',
+          plan: null,
+          relationSummary: '父 Issue 0 · 子 Issue 0 · Blocks 0 · Blocked by 0',
+          relations: [],
+          history: ['2026-08-25 · san.zhang · 已完成验证'],
+          issueKeyPrefix: 'DEVBOARD-',
+        },
+      }
+
+      const relationTypeOptions = [
+        { label: '父 Issue', hint: '当前 Issue 作为子 Issue' },
+        { label: '子 Issue', hint: '当前 Issue 作为父 Issue' },
+        { label: 'Blocks', hint: '当前 Issue 阻塞目标 Issue' },
+        { label: 'Blocked by', hint: '当前 Issue 被目标 Issue 阻塞' },
+        { label: 'Relates', hint: '当前 Issue 与目标 Issue 相关' },
+      ]
+      const relationCandidates = [
+        { key: 'DEVBOARD-320', title: 'Issue 体系升级', status: 'In Progress', owner: 'hang.li' },
+        { key: 'DEVBOARD-361', title: 'Issue 详情关联关系卡片收敛', status: 'Review', owner: 'yao.li' },
+        { key: 'DEVBOARD-366', title: '状态流转门禁补齐', status: 'Todo', owner: 'san.zhang' },
+        { key: 'DEVBOARD-387', title: 'issue 标签选择交互优化', status: 'Todo', owner: 'fangyu.zhang' },
+        { key: 'DEVBOARD-389', title: '关联关系下拉搜索组件抽取', status: 'Todo', owner: 'kaiyu.wang' },
+        { key: 'DEVBOARD-390', title: '编辑抽屉保存关系补充说明', status: 'Review', owner: 'kaiyu.wang' },
+        { key: 'DEVBOARD-391', title: '保存后同步详情页关联卡片', status: 'In Progress', owner: 'san.zhang' },
+        { key: 'DEVBOARD-402', title: '新建 Issue 表单字段顺序优化', status: 'Todo', owner: 'fangyu.zhang' },
+      ]
+      const planCandidates = [
+        { key: 'PL-101', title: '关联关系与标签交互二期', owner: 'san.zhang' },
+        { key: 'PL-102', title: 'Issue 新建与编辑表单优化', owner: 'kaiyu.wang' },
+        { key: 'PL-103', title: 'Issue 详情页操作收敛', owner: 'fangyu.zhang' },
+        { key: 'PL-104', title: 'DevBoard Issue 路由梳理', owner: 'yao.li' },
+      ]
+      const relationState = {
+        typeIndex: 0,
+        targetKey: '',
+        note: '',
+        targetQuery: '',
+        openPopover: '',
+      }
+      const planState = {
+        selectedKey: '',
+        openPopover: '',
+      }
+      const detailPlanState = {
+        openPopover: false,
+      }
+
+      const drawerEls = {
+        overlay: document.getElementById('overlay'),
+        drawer: document.getElementById('drawer'),
+        title: document.getElementById('drawer-title'),
+        subtitle: document.getElementById('drawer-subtitle'),
+        product: document.getElementById('drawer-product'),
+        issueKey: document.getElementById('drawer-issue-key'),
+        owner: document.getElementById('drawer-owner'),
+        titleInput: document.getElementById('drawer-title-input'),
+        tags: document.getElementById('drawer-tags'),
+        description: document.getElementById('drawer-description'),
+        planText: document.getElementById('drawer-plan-text'),
+        planSelect: document.getElementById('drawer-plan-select'),
+        planClear: document.getElementById('drawer-plan-clear'),
+        planPopover: document.getElementById('drawer-plan-popover'),
+        planList: document.getElementById('drawer-plan-list'),
+        relationType: document.getElementById('drawer-relation-type-text'),
+        relationTarget: document.getElementById('drawer-relation-target-text'),
+        relationTypePopover: document.getElementById('relation-type-popover'),
+        relationTypeList: document.getElementById('relation-type-list'),
+        relationTargetPopover: document.getElementById('relation-target-popover'),
+        relationTargetList: document.getElementById('relation-target-list'),
+        relationTargetSearch: document.getElementById('relation-target-search'),
+        relationState: document.getElementById('drawer-relation-state'),
+        selectedTarget: document.getElementById('drawer-selected-target'),
+        relationNote: document.getElementById('drawer-relation-note'),
+        relationSummary: document.getElementById('drawer-relation-summary'),
+        relationGroups: document.getElementById('drawer-relation-groups'),
+        selectedRelation: document.getElementById('drawer-selected-relation'),
+        save: document.getElementById('drawer-save'),
+      }
+
+      const listView = document.getElementById('list-view')
+      const detailView = document.getElementById('detail-view')
+      const pageHeader = document.getElementById('page-header')
+      const detailEls = {
+        breadcrumb: document.getElementById('detail-breadcrumb'),
+        status: document.getElementById('detail-status'),
+        keyChip: document.getElementById('detail-key-chip'),
+        title: document.getElementById('detail-title'),
+        creator: document.getElementById('detail-creator'),
+        created: document.getElementById('detail-created'),
+        updated: document.getElementById('detail-updated'),
+        description: document.getElementById('detail-description'),
+        relations: document.getElementById('detail-relations'),
+        history: document.getElementById('detail-history'),
+        issueKey: document.getElementById('detail-issue-key'),
+        product: document.getElementById('detail-product'),
+        owner: document.getElementById('detail-owner'),
+        statusPill: document.getElementById('detail-status-pill'),
+        planCard: document.getElementById('detail-plan-card'),
+        planCount: document.getElementById('detail-plan-count'),
+        planBody: document.getElementById('detail-plan-body'),
+        planItem: document.getElementById('detail-plan-item'),
+        planKey: document.getElementById('detail-plan-key'),
+        planTitle: document.getElementById('detail-plan-title'),
+        planOwner: document.getElementById('detail-plan-owner'),
+        planEmpty: document.getElementById('detail-plan-empty'),
+        planClear: document.getElementById('detail-plan-clear'),
+        planSwitch: document.getElementById('detail-plan-switch'),
+        planPopover: document.getElementById('detail-plan-popover'),
+        planList: document.getElementById('detail-plan-list'),
+      }
+
+      let selectedIssueKey = 'DEVBOARD-387'
+      let drawerMode = 'create'
+      let activeDrawerIssue = null
+      const createDraft = {
+        key: 'DEVBOARD-388',
+        title: 'Issue 标签选择交互与关联关系优化',
+        status: 'Todo',
+        owner: 'fangyu.zhang',
+        product: 'Devboard',
+        creator: 'fangyu.zhang',
+        created_at: '2026-08-28 09:30',
+        updated_at: '2026-08-28 09:30',
+        tags: [
+          { name: '需求', color: '#2563eb' },
+          { name: '交互优化', color: '#16a34a' },
+        ],
+        plan: null,
+        description: '在抽屉中完成新建 Issue、标签、正文和关联关系配置。',
+        relationSummary: '父 Issue 0 · 子 Issue 0 · Blocks 0 · Blocked by 0',
+        relations: [],
+      }
+
+      function renderStatusBadge(status) {
+        if (status === 'Done') return 'badge green'
+        if (status === 'In Progress') return 'badge blue'
+        return 'badge amber'
+      }
+
+      function renderRelations(container, issue) {
+        container.innerHTML = ''
+        if (!issue.relations.length) {
+          container.innerHTML = '<div class="muted">暂无关联 Issue</div>'
+          return
+        }
+        issue.relations.forEach(group => {
+          const groupEl = document.createElement('div')
+          groupEl.className = 'relation-group'
+          groupEl.innerHTML = `
+            <div class="relation-group-head">
+              <div class="relation-group-title">${group.title}</div>
+              <span class="badge">${group.items.length}</span>
+            </div>
+            <div class="relation-group-items">
+              ${group.items
+                .map(
+                  item => `
+                    <div class="relation-item">
+                      <div class="relation-item-main">
+                        <span class="mono relation-item-key">${item.key}</span>
+                        <div class="relation-item-text">
+                          <div class="truncate relation-item-title">${item.title}</div>
+                          <div class="relation-item-subtitle">${item.note ? `补充信息：${item.note}` : '悬浮可删除'}</div>
+                        </div>
+                      </div>
+                      <span class="${renderStatusBadge(item.status)} relation-status">${item.status}</span>
+                      <button class="relation-remove" type="button" data-relation-key="${item.key}" title="移除关联" aria-label="移除关联">×</button>
+                    </div>
+                  `
+                )
+                .join('')}
+            </div>
+          `
+          container.appendChild(groupEl)
+        })
+
+        container.querySelectorAll('[data-relation-key]').forEach(button => {
+          button.addEventListener('click', event => {
+            event.preventDefault()
+            event.stopPropagation()
+            const key = button.getAttribute('data-relation-key')
+            const issue = issues[selectedIssueKey]
+            issue.relations = issue.relations
+              .map(group => ({
+                ...group,
+                items: group.items.filter(item => item.key !== key),
+              }))
+              .filter(group => group.items.length > 0)
+            issue.relationSummary = buildRelationSummary(issue)
+            renderDetail(issue)
+            if (!drawerEls.drawer.classList.contains('hidden') && drawerMode === 'edit' && selectedIssueKey === issue.key) {
+              renderDrawer('edit', issue)
+            }
+          })
+        })
+      }
+
+      function buildRelationSummary(issue) {
+        const counts = {
+          '父 Issue': 0,
+          '子 Issue': 0,
+          Blocks: 0,
+          'Blocked by': 0,
+          Relates: 0,
+        }
+        issue.relations.forEach(group => {
+          if (group.title in counts) counts[group.title] = group.items.length
+        })
+        return `父 Issue ${counts['父 Issue']} · 子 Issue ${counts['子 Issue']} · Blocks ${counts.Blocks} · Blocked by ${counts['Blocked by']} · Relates ${counts.Relates}`
+      }
+
+      function renderTags(container, tags = []) {
+        const chips = tags
+          .map(
+            tag => `
+              <span class="mini-tag" style="color: ${tag.color || '#2563eb'}">${tag.name}</span>
+            `
+          )
+          .join('')
+        container.innerHTML = `${chips}<span class="select-placeholder">+ 添加标签</span>`
+      }
+
+      function renderStatusBadgeClass(status) {
+        if (status === 'Done') return 'badge green'
+        if (status === 'In Progress') return 'badge blue'
+        if (status === 'Review') return 'badge amber'
+        return 'badge amber'
+      }
+
+      function getPlanLabel(plan) {
+        return plan ? `${plan.key} · ${plan.title}` : '选择关联 Plan'
+      }
+
+      function renderPlanMenu(container, selectedKey, onSelect) {
+        container.innerHTML = planCandidates
+          .map(
+            plan => `
+              <button class="popover-item${plan.key === selectedKey ? ' active' : ''}" type="button" data-plan-main="${plan.key}">
+                <div class="popover-item-title">
+                  <span class="popover-item-key mono">${plan.key}</span>
+                  <span class="truncate">${plan.title}</span>
+                </div>
+                <div class="popover-item-meta">
+                  <span>负责人 ${plan.owner}</span>
+                  ${plan.key === selectedKey ? '<span class="badge">当前</span>' : ''}
+                </div>
+              </button>
+            `
+          )
+          .join('')
+
+        container.querySelectorAll('[data-plan-main]').forEach(button => {
+          button.addEventListener('click', () => onSelect(button.getAttribute('data-plan-main')))
+        })
+      }
+
+      function getPlanByKey(planKey) {
+        return planCandidates.find(plan => plan.key === planKey) || null
+      }
+
+      function renderDrawerPlan(issue) {
+        const plan = issue.plan || null
+        planState.selectedKey = plan ? plan.key : ''
+        drawerEls.planText.textContent = plan ? getPlanLabel(plan) : '选择关联 Plan'
+        drawerEls.planText.classList.toggle('select-placeholder', !plan)
+        drawerEls.planClear.classList.toggle('hidden', !plan)
+        drawerEls.planPopover.classList.toggle('hidden', planState.openPopover !== 'plan')
+        renderPlanMenu(drawerEls.planList, planState.selectedKey, planKey => {
+          const picked = getPlanByKey(planKey)
+          issue.plan = picked
+          planState.selectedKey = picked ? picked.key : ''
+          planState.openPopover = ''
+          renderDrawerPlan(issue)
+          if (drawerMode === 'edit' && activeDrawerIssue && activeDrawerIssue.key === selectedIssueKey) {
+            renderDetail(activeDrawerIssue)
+          }
+        })
+      }
+
+      function renderDetailPlan(issue) {
+        const plan = issue.plan || null
+        detailEls.planCount.textContent = plan ? '1' : '0'
+        detailEls.planKey.textContent = plan ? plan.key : '未关联'
+        detailEls.planTitle.textContent = plan ? plan.title : '未关联 Plan'
+        detailEls.planOwner.textContent = plan ? `负责人: ${plan.owner}` : '请在右侧卡片中选择'
+        detailEls.planItem.classList.toggle('hidden', !plan)
+        detailEls.planEmpty.classList.toggle('hidden', !!plan)
+        detailEls.planClear.classList.toggle('hidden', !plan)
+        detailEls.planSwitch.textContent = plan ? '切换' : '关联'
+        detailEls.planPopover.classList.toggle('hidden', !detailPlanState.openPopover)
+        renderPlanMenu(detailEls.planList, plan ? plan.key : '', planKey => {
+          const picked = getPlanByKey(planKey)
+          issue.plan = picked
+          detailPlanState.openPopover = false
+          renderDetail(issue)
+          if (!drawerEls.drawer.classList.contains('hidden') && activeDrawerIssue && activeDrawerIssue.key === issue.key && drawerMode === 'edit') {
+            renderDrawer('edit', issue)
+          }
+        })
+      }
+
+      function getRelationType(index = relationState.typeIndex) {
+        return relationTypeOptions[index] || relationTypeOptions[0]
+      }
+
+      function getRelationCandidateLabel(item) {
+        return `${item.key} · ${item.title}`
+      }
+
+      function getFilteredRelationCandidates(issue) {
+        const query = relationState.targetQuery.trim().toLowerCase()
+        return relationCandidates
+          .filter(item => item.key !== issue.key)
+          .filter(item => {
+            if (!query) return true
+            return [item.key, item.title, item.owner, item.status].join(' ').toLowerCase().includes(query)
+          })
+      }
+
+      function renderRelationTypeMenu() {
+        drawerEls.relationTypeList.innerHTML = relationTypeOptions
+          .map(
+            (item, index) => `
+              <button class="popover-item${index === relationState.typeIndex ? ' active' : ''}" type="button" data-type-index="${index}">
+                <div class="popover-item-title">
+                  <span class="popover-item-key mono">${item.label}</span>
+                  ${index === relationState.typeIndex ? '<span class="badge">当前</span>' : ''}
+                </div>
+                <div class="popover-item-meta">
+                  <span>${item.hint}</span>
+                </div>
+              </button>
+            `
+          )
+          .join('')
+
+        drawerEls.relationTypeList.querySelectorAll('[data-type-index]').forEach(button => {
+          button.addEventListener('click', () => {
+            const index = Number(button.getAttribute('data-type-index'))
+            relationState.typeIndex = index
+            relationState.targetKey = ''
+            relationState.targetQuery = ''
+            drawerEls.relationTargetSearch.value = ''
+            relationState.openPopover = ''
+            syncRelationComposer(activeDrawerIssue)
+          })
+        })
+      }
+
+      function renderRelationTargetMenu() {
+        if (!activeDrawerIssue) return
+        const candidates = getFilteredRelationCandidates(activeDrawerIssue)
+        if (!candidates.length) {
+          drawerEls.relationTargetList.innerHTML = '<div class="popover-empty">没有匹配的 Issue</div>'
+          return
+        }
+
+        drawerEls.relationTargetList.innerHTML = candidates
+          .map(
+            item => `
+              <button class="popover-item${item.key === relationState.targetKey ? ' active' : ''}" type="button" data-target-key="${item.key}">
+                <div class="popover-item-title">
+                  <span class="popover-item-key mono">${item.key}</span>
+                  <span class="truncate">${item.title}</span>
+                </div>
+                <div class="popover-item-meta">
+                  <span>负责人 ${item.owner}</span>
+                  <span class="${renderStatusBadge(item.status)}">${item.status}</span>
+                </div>
+              </button>
+            `
+          )
+          .join('')
+
+        drawerEls.relationTargetList.querySelectorAll('[data-target-key]').forEach(button => {
+          button.addEventListener('click', () => {
+            relationState.targetKey = button.getAttribute('data-target-key')
+            const target = relationCandidates.find(item => item.key === relationState.targetKey)
+            relationState.targetQuery = target ? getRelationCandidateLabel(target) : ''
+            drawerEls.relationTargetSearch.value = relationState.targetQuery
+            relationState.openPopover = ''
+            syncRelationComposer(activeDrawerIssue)
+          })
+        })
+      }
+
+      function syncRelationComposer(issue) {
+        const type = getRelationType()
+        const target = relationState.targetKey ? relationCandidates.find(item => item.key === relationState.targetKey) : null
+        drawerEls.relationType.textContent = type.label
+        drawerEls.relationTarget.textContent = target ? getRelationCandidateLabel(target) : type.hint
+        drawerEls.relationState.textContent = `${type.label} · ${target ? target.key : '未选择 Issue'}`
+        drawerEls.selectedTarget.textContent = target ? `${target.key} · ${target.title} · ${target.owner}` : '未选择'
+        drawerEls.relationNote.value = relationState.note
+        drawerEls.relationTypePopover.classList.toggle('hidden', relationState.openPopover !== 'type')
+        drawerEls.relationTargetPopover.classList.toggle('hidden', relationState.openPopover !== 'target')
+        drawerEls.selectedRelation.classList.toggle('hidden', !relationState.targetKey)
+        renderRelationTypeMenu()
+        renderRelationTargetMenu()
+        issue.relationSummary = buildRelationSummary(issue)
+        drawerEls.relationSummary.textContent = issue.relationSummary
+        renderRelations(drawerEls.relationGroups, issue)
+      }
+
+      function showRelationPopover(kind) {
+        hidePlanPopovers()
+        relationState.openPopover = relationState.openPopover === kind ? '' : kind
+        if (relationState.openPopover === 'type') {
+          renderRelationTypeMenu()
+        }
+        if (relationState.openPopover === 'target') {
+          drawerEls.relationTargetSearch.value = relationState.targetQuery
+          renderRelationTargetMenu()
+          window.requestAnimationFrame(() => drawerEls.relationTargetSearch.focus())
+        }
+        syncRelationComposer(activeDrawerIssue)
+      }
+
+      function hideRelationPopovers() {
+        relationState.openPopover = ''
+        if (activeDrawerIssue) {
+          syncRelationComposer(activeDrawerIssue)
+        }
+      }
+
+      function hidePlanPopovers() {
+        planState.openPopover = ''
+        detailPlanState.openPopover = false
+        if (activeDrawerIssue) renderDrawerPlan(activeDrawerIssue)
+        if (!detailView.classList.contains('hidden') && selectedIssueKey && issues[selectedIssueKey]) {
+          renderDetailPlan(issues[selectedIssueKey])
+        }
+      }
+
+      function resetRelationComposer(issue) {
+        relationState.typeIndex = 0
+        relationState.targetKey = ''
+        relationState.note = ''
+        relationState.targetQuery = ''
+        relationState.openPopover = ''
+        activeDrawerIssue = issue
+        syncRelationComposer(issue)
+      }
+
+      function addDraftRelation() {
+        if (!activeDrawerIssue) return
+        const target = relationState.targetKey ? relationCandidates.find(item => item.key === relationState.targetKey) : null
+        if (!target) {
+          relationState.openPopover = 'target'
+          syncRelationComposer(activeDrawerIssue)
+          return
+        }
+
+        const type = getRelationType()
+        const nextRelations = activeDrawerIssue.relations
+          .map(group => ({
+            ...group,
+            items: group.items.filter(item => item.key !== target.key),
+          }))
+          .filter(group => group.items.length > 0)
+        let group = nextRelations.find(item => item.title === type.label)
+        if (!group) {
+          group = { title: type.label, count: 0, items: [] }
+          nextRelations.push(group)
+        }
+        group.items.push({
+          key: target.key,
+          title: target.title,
+          status: target.status,
+          owner: target.owner,
+          note: relationState.note.trim(),
+        })
+        activeDrawerIssue.relations = nextRelations
+        activeDrawerIssue.relationSummary = buildRelationSummary(activeDrawerIssue)
+        relationState.targetKey = ''
+        relationState.targetQuery = ''
+        relationState.note = ''
+        relationState.openPopover = ''
+        drawerEls.relationTargetSearch.value = ''
+        syncRelationComposer(activeDrawerIssue)
+        if (drawerMode === 'edit' && activeDrawerIssue.key === selectedIssueKey) {
+          renderDetail(activeDrawerIssue)
+        }
+      }
+
+      function renderDetail(issue) {
+        issue.relationSummary = buildRelationSummary(issue)
+        selectedIssueKey = issue.key
+        detailEls.breadcrumb.textContent = `${issue.product} / Issue`
+        detailEls.status.className = renderStatusBadge(issue.status)
+        detailEls.status.textContent = issue.status
+        detailEls.keyChip.textContent = `issue_key: ${issue.key}`
+        detailEls.title.textContent = issue.title
+        detailEls.creator.textContent = issue.creator || issue.owner || '—'
+        detailEls.created.textContent = issue.created_at || '—'
+        detailEls.updated.textContent = issue.updated_at || '—'
+        detailEls.issueKey.textContent = issue.key
+        detailEls.product.textContent = issue.product
+        detailEls.owner.textContent = issue.owner
+        detailEls.statusPill.className = renderStatusBadge(issue.status)
+        detailEls.statusPill.textContent = issue.status
+        detailEls.description.innerHTML = `<p>${issue.description}</p>`
+        renderRelations(detailEls.relations, issue)
+        renderDetailPlan(issue)
+        detailEls.history.innerHTML = (issue.history || [])
+          .map(
+            item => `
+              <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">${item}</div>
+              </div>
+            `
+          )
+          .join('')
+        detailView.classList.remove('hidden')
+        listView.classList.add('hidden')
+        pageHeader.classList.add('hidden')
+      }
+
+      function renderDrawer(mode, issue) {
+        drawerMode = mode
+        activeDrawerIssue = issue
+        const editing = mode === 'edit'
+        drawerEls.title.textContent = editing ? '编辑 Issue' : '新建 Issue'
+        drawerEls.subtitle.textContent = editing ? `${issue.product} / ${issue.key}` : 'Devboard / Issue'
+        drawerEls.product.textContent = issue.product
+        drawerEls.issueKey.textContent = editing ? issue.key : createDraft.key
+        drawerEls.owner.textContent = issue.owner
+        drawerEls.titleInput.value = issue.title
+        renderTags(drawerEls.tags, issue.tags || [])
+        drawerEls.description.value = issue.description
+        planState.openPopover = ''
+        renderDrawerPlan(issue)
+        resetRelationComposer(issue)
+        drawerEls.save.textContent = editing ? '保存修改' : '创建 Issue'
+      }
+
+      function openDrawer(mode) {
+        const issue = mode === 'edit' ? issues[selectedIssueKey] : createDraft
+        hideRelationPopovers()
+        hidePlanPopovers()
+        renderDrawer(mode, issue)
+        drawerEls.overlay.classList.remove('hidden')
+        drawerEls.drawer.classList.remove('hidden')
+      }
+
+      function closeDrawer() {
+        drawerEls.overlay.classList.add('hidden')
+        drawerEls.drawer.classList.add('hidden')
+        hideRelationPopovers()
+        hidePlanPopovers()
+      }
+
+      function selectIssue(issueKey) {
+        selectedIssueKey = issueKey
+        document.querySelectorAll('.issue-row').forEach(row => row.classList.toggle('active', row.dataset.issue === issueKey))
+        detailPlanState.openPopover = false
+        renderDetail(issues[issueKey])
+        window.location.hash = `issue-${issueKey}`
+      }
+
+      document.getElementById('open-create').addEventListener('click', event => {
+        event.preventDefault()
+        openDrawer('create')
+        window.location.hash = 'create'
+      })
+      document.getElementById('open-edit').addEventListener('click', event => {
+        event.preventDefault()
+        openDrawer('edit')
+        window.location.hash = `issue-${selectedIssueKey}/edit`
+      })
+      document.getElementById('close-drawer').addEventListener('click', closeDrawer)
+      document.getElementById('drawer-cancel').addEventListener('click', closeDrawer)
+      drawerEls.overlay.addEventListener('click', closeDrawer)
+      document.getElementById('back-to-list').addEventListener('click', event => {
+        event.preventDefault()
+        closeDrawer()
+        detailView.classList.add('hidden')
+        listView.classList.remove('hidden')
+        pageHeader.classList.remove('hidden')
+        window.location.hash = 'list'
+      })
+      document.querySelectorAll('.issue-row').forEach(row => {
+        row.addEventListener('click', () => selectIssue(row.dataset.issue))
+      })
+
+      document.getElementById('drawer-relation-type').addEventListener('click', () => showRelationPopover('type'))
+      document.getElementById('drawer-relation-target').addEventListener('click', () => showRelationPopover('target'))
+      drawerEls.planSelect.addEventListener('click', () => {
+        hideRelationPopovers()
+        planState.openPopover = planState.openPopover === 'plan' ? '' : 'plan'
+        renderDrawerPlan(activeDrawerIssue)
+      })
+      drawerEls.planClear.addEventListener('click', event => {
+        event.preventDefault()
+        event.stopPropagation()
+        if (!activeDrawerIssue) return
+        activeDrawerIssue.plan = null
+        planState.openPopover = ''
+        renderDrawerPlan(activeDrawerIssue)
+        if (drawerMode === 'edit' && activeDrawerIssue.key === selectedIssueKey) {
+          renderDetail(activeDrawerIssue)
+        }
+      })
+      document.getElementById('drawer-add-relation').addEventListener('click', addDraftRelation)
+      drawerEls.relationTargetSearch.addEventListener('input', event => {
+        relationState.targetQuery = event.target.value
+        renderRelationTargetMenu()
+      })
+      drawerEls.relationNote.addEventListener('input', event => {
+        relationState.note = event.target.value
+      })
+      detailEls.planSwitch.addEventListener('click', event => {
+        event.preventDefault()
+        event.stopPropagation()
+        detailPlanState.openPopover = !detailPlanState.openPopover
+        renderDetailPlan(issues[selectedIssueKey])
+      })
+      detailEls.planClear.addEventListener('click', event => {
+        event.preventDefault()
+        event.stopPropagation()
+        const issue = issues[selectedIssueKey]
+        issue.plan = null
+        detailPlanState.openPopover = false
+        renderDetail(issue)
+        if (!drawerEls.drawer.classList.contains('hidden') && activeDrawerIssue && activeDrawerIssue.key === issue.key && drawerMode === 'edit') {
+          renderDrawer('edit', issue)
+        }
+      })
+      document.addEventListener('click', event => {
+        if (event.target.closest('#drawer-relation-type') || event.target.closest('#drawer-relation-target')) return
+        if (event.target.closest('#drawer-plan-select') || event.target.closest('#drawer-plan-clear') || event.target.closest('#drawer-plan-popover')) return
+        if (event.target.closest('#detail-plan-switch') || event.target.closest('#detail-plan-clear') || event.target.closest('#detail-plan-popover')) return
+        if (event.target.closest('#relation-type-popover') || event.target.closest('#relation-target-popover')) return
+        hideRelationPopovers()
+        hidePlanPopovers()
+      })
+
+      function syncRoute() {
+        const route = window.location.hash.replace('#', '')
+        if (route.startsWith('issue-')) {
+          const issueMode = route.replace('issue-', '')
+          const issueKey = issueMode.replace('/edit', '')
+          if (issues[issueKey]) {
+            selectIssue(issueKey)
+            if (issueMode.endsWith('/edit')) {
+              openDrawer('edit')
+            }
+            return
+          }
+        }
+
+        if (route === 'create') {
+          openDrawer('create')
+          return
+        }
+
+        if (route === 'edit') {
+          openDrawer('edit')
+          return
+        }
+
+        if (route === 'list' || route === '') {
+          closeDrawer()
+          detailView.classList.add('hidden')
+          listView.classList.remove('hidden')
+          pageHeader.classList.remove('hidden')
+          return
+        }
+
+        detailView.classList.add('hidden')
+        listView.classList.remove('hidden')
+        pageHeader.classList.remove('hidden')
+      }
+
+      window.addEventListener('hashchange', syncRoute)
+      syncRoute()
+    </script>
+  </body>
+</html>

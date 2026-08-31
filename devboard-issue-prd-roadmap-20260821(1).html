@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="DevBoard 总体迭代规划与一期 Issue 规范化优化 PRD" />
+    <title>DevBoard 总体迭代规划与一期优化 PRD</title>
+    <style>
+      :root {
+        --bg: #f5f6f8;
+        --surface: #ffffff;
+        --surface-soft: #f8f9fb;
+        --text: #18202f;
+        --muted: #667085;
+        --subtle: #98a2b3;
+        --border: #e4e7ec;
+        --primary: #5b5bd6;
+        --primary-soft: #efefff;
+        --primary-border: #d8d7ff;
+        --success: #16865d;
+        --success-soft: #eaf8f2;
+        --warning: #b35c00;
+        --warning-soft: #fff4e5;
+        --danger: #b42318;
+        --danger-soft: #fef0ef;
+        --sidebar: 276px;
+        --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 4px 12px rgba(16, 24, 40, 0.04);
+      }
+
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        line-height: 1.65;
+      }
+
+      a { color: inherit; }
+      button { font: inherit; }
+
+      .layout {
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: var(--sidebar) minmax(0, 1fr);
+      }
+
+      .sidebar {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow-y: auto;
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        padding: 28px 20px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        margin-bottom: 26px;
+        padding: 0 8px;
+      }
+
+      .brand-mark {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        background: var(--primary);
+        color: white;
+        font-weight: 760;
+        letter-spacing: -0.04em;
+      }
+
+      .brand-title { font-size: 16px; font-weight: 720; line-height: 1.3; }
+      .brand-subtitle { margin-top: 2px; font-size: 12px; color: var(--muted); }
+      .nav-title { margin: 22px 8px 8px; color: var(--subtle); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; }
+      .nav a {
+        display: block;
+        padding: 8px 10px;
+        border-radius: 8px;
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 13px;
+      }
+      .nav a:hover { background: var(--surface-soft); color: var(--text); }
+      .sidebar-note {
+        margin-top: 24px;
+        padding: 12px;
+        border: 1px solid var(--primary-border);
+        border-radius: 10px;
+        background: var(--primary-soft);
+        color: #4949a7;
+        font-size: 12px;
+      }
+
+      main { min-width: 0; padding: 34px 42px 64px; }
+      .content { width: min(1120px, 100%); margin: 0 auto; }
+
+      .hero {
+        padding: 34px 36px;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 5px 10px;
+        border-radius: 999px;
+        background: var(--primary-soft);
+        color: var(--primary);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      h1 { margin: 18px 0 12px; font-size: clamp(30px, 4vw, 46px); line-height: 1.18; letter-spacing: -0.035em; }
+      .hero-lead { max-width: 850px; margin: 0; color: var(--muted); font-size: 17px; }
+      .meta-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+      .meta {
+        padding: 7px 10px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface-soft);
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .decision {
+        margin-top: 22px;
+        padding: 18px 20px;
+        border-left: 4px solid var(--primary);
+        border-radius: 8px;
+        background: var(--primary-soft);
+        color: #3f3f8f;
+        font-size: 16px;
+        font-weight: 650;
+      }
+
+      section {
+        scroll-margin-top: 20px;
+        margin-top: 26px;
+        padding: 30px 32px;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      .section-kicker { margin: 0 0 5px; color: var(--primary); font-size: 12px; font-weight: 750; letter-spacing: 0.06em; }
+      h2 { margin: 0 0 12px; font-size: 25px; line-height: 1.3; letter-spacing: -0.02em; }
+      h3 { margin: 26px 0 10px; font-size: 18px; line-height: 1.4; }
+      h4 { margin: 20px 0 8px; font-size: 15px; }
+      p { margin: 9px 0; }
+      .section-intro { margin-top: 0; color: var(--muted); }
+      .muted { color: var(--muted); }
+
+      .grid { display: grid; gap: 14px; }
+      .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+      .card {
+        min-width: 0;
+        padding: 18px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--surface-soft);
+      }
+      .card h3, .card h4 { margin-top: 0; }
+      .card p:last-child { margin-bottom: 0; }
+      .card-number { color: var(--primary); font-size: 12px; font-weight: 760; }
+
+      .flow {
+        margin: 16px 0;
+        padding: 18px;
+        border: 1px solid var(--primary-border);
+        border-radius: 12px;
+        background: #fafaff;
+        overflow-x: auto;
+        color: #45459a;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 14px;
+        white-space: nowrap;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 720;
+      }
+      .pill.p0 { color: var(--danger); background: var(--danger-soft); }
+      .pill.p1 { color: var(--warning); background: var(--warning-soft); }
+      .pill.p2 { color: var(--success); background: var(--success-soft); }
+      .pill.primary { color: var(--primary); background: var(--primary-soft); }
+
+      .table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; }
+      table { width: 100%; border-collapse: collapse; min-width: 700px; font-size: 13px; }
+      th, td { padding: 12px 14px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+      th { background: var(--surface-soft); color: #475467; font-size: 12px; font-weight: 720; }
+      tr:last-child td { border-bottom: 0; }
+
+      ul, ol { margin: 8px 0; padding-left: 21px; }
+      li { margin: 5px 0; }
+      .checklist { list-style: none; padding-left: 0; }
+      .checklist li { position: relative; padding-left: 25px; }
+      .checklist li::before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        top: 1px;
+        width: 17px;
+        height: 17px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: var(--success-soft);
+        color: var(--success);
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .timeline { display: grid; gap: 12px; }
+      .timeline-item {
+        display: grid;
+        grid-template-columns: 104px minmax(0, 1fr);
+        gap: 15px;
+        padding: 15px 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .timeline-item:last-child { border-bottom: 0; }
+      .timeline-time { color: var(--primary); font-size: 13px; font-weight: 760; }
+      .timeline-title { margin: 0 0 4px; font-weight: 700; }
+      .timeline-text { margin: 0; color: var(--muted); font-size: 13px; }
+
+      .readiness {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(125px, 1fr));
+        gap: 10px;
+        margin-top: 16px;
+        overflow-x: auto;
+      }
+      .readiness-step { min-width: 125px; padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-soft); }
+      .readiness-step strong { display: block; margin-bottom: 5px; font-size: 14px; }
+      .readiness-step span { display: block; color: var(--muted); font-size: 12px; line-height: 1.5; }
+      .readiness-step.ready { border-color: #a9e3cf; background: var(--success-soft); }
+
+      .role-card { border-top: 3px solid var(--primary); }
+      .role-card ul { color: var(--muted); font-size: 13px; }
+      .status-good { color: var(--success); font-weight: 700; }
+      .status-warn { color: var(--warning); font-weight: 700; }
+
+      .summary-box {
+        padding: 22px;
+        border: 1px solid var(--primary-border);
+        border-radius: 13px;
+        background: var(--primary-soft);
+      }
+      .summary-box h3 { margin-top: 0; color: #41418f; }
+
+      .footer { padding: 30px 0 0; color: var(--subtle); text-align: center; font-size: 12px; }
+
+      .mobile-header { display: none; }
+
+      @media (max-width: 1080px) {
+        :root { --sidebar: 236px; }
+        main { padding: 26px; }
+        .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .readiness { grid-template-columns: repeat(5, 160px); }
+      }
+
+      @media (max-width: 820px) {
+        html { scroll-behavior: auto; }
+        .layout { display: block; }
+        .sidebar { display: none; }
+        .mobile-header {
+          position: sticky;
+          top: 0;
+          z-index: 10;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 12px 16px;
+          border-bottom: 1px solid var(--border);
+          background: rgba(255, 255, 255, 0.96);
+        }
+        .mobile-header strong { font-size: 14px; }
+        .mobile-header a { color: var(--primary); text-decoration: none; font-size: 12px; font-weight: 700; }
+        main { padding: 18px 14px 46px; }
+        .hero { padding: 25px 20px; }
+        section { padding: 23px 19px; }
+        .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+        .timeline-item { grid-template-columns: 1fr; gap: 4px; }
+      }
+
+      @media print {
+        :root { --bg: #fff; }
+        .layout { display: block; }
+        .sidebar, .mobile-header { display: none; }
+        main { padding: 0; }
+        .content { width: 100%; }
+        .hero, section { box-shadow: none; break-inside: avoid; }
+        section { margin-top: 14px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="mobile-header">
+      <strong>DevBoard 一期优化 PRD</strong>
+      <a href="#phase-one">查看一期</a>
+    </div>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">DB</div>
+          <div>
+            <div class="brand-title">DevBoard</div>
+            <div class="brand-subtitle">迭代规划与一期 PRD</div>
+          </div>
+        </div>
+
+        <nav class="nav" aria-label="文档导航">
+          <div class="nav-title">汇报摘要</div>
+          <a href="#summary">核心判断</a>
+          <a href="#current-problems">当前问题</a>
+          <a href="#target-model">目标模型</a>
+
+          <div class="nav-title">总体规划</div>
+          <a href="#roadmap">迭代路线</a>
+          <a href="#role-experience">分角色体验</a>
+
+          <div class="nav-title">一期 PRD</div>
+          <a href="#phase-one">一期概述</a>
+          <a href="#prd-entry">Issue 内 PRD</a>
+          <a href="#readiness">开发准备度</a>
+          <a href="#gates">开发门禁</a>
+          <a href="#templates">Issue 模板</a>
+          <a href="#permissions">权限设计</a>
+          <a href="#acceptance">验收标准</a>
+          <a href="#delivery-plan">实施计划</a>
+          <a href="#metrics">效果指标</a>
+          <a href="#decisions">待确认决策</a>
+        </nav>
+
+        <div class="sidebar-note">
+          一期只解决“Issue 如何被补全并进入开发”，不重构全部 Plan、Task、Spec。
+        </div>
+      </aside>
+
+      <main>
+        <div class="content">
+          <header class="hero" id="summary">
+            <div class="eyebrow">产品规划 · 汇报版本</div>
+            <h1>DevBoard 总体迭代规划<br />与一期优化 PRD</h1>
+            <p class="hero-lead">
+              以 Issue 为统一需求入口，通过 Issue 内 PRD、开发准备度标签和角色待办，先解决需求不规范、上下文缺失和流程冗余问题，再逐步推进 Task 去重、产品级工作流和 Plan 重构。
+            </p>
+            <div class="meta-row">
+              <span class="meta">版本：V1.0</span>
+              <span class="meta">日期：2026-08-21</span>
+              <span class="meta">一期建议周期：5周</span>
+              <span class="meta">建议方式：按产品灰度</span>
+            </div>
+            <div class="decision">
+              核心建议：Issue 成为唯一需求入口和业务上下文中心；PRD 内嵌 Issue；Task、Spec、Plan 根据需求复杂度按需使用。
+            </div>
+          </header>
+
+          <section id="current-problems">
+            <div class="section-kicker">01 · 现状判断</div>
+            <h2>为什么需要调整</h2>
+            <p class="section-intro">当前产品模型与真实研发工作方式之间存在明显差异。</p>
+            <div class="grid grid-2">
+              <article class="card">
+                <h3>需求入口不规范</h3>
+                <ul>
+                  <li>非 PM 创建的 Issue 经常缺少背景、目标和验收标准。</li>
+                  <li>研发仍需通过会议、群聊或口头方式补齐上下文。</li>
+                  <li>Issue 创建门槛低，但进入开发没有明确门禁。</li>
+                </ul>
+              </article>
+              <article class="card">
+                <h3>对象和操作重复</h3>
+                <ul>
+                  <li>Issue 与 Task 重复维护标题、描述、负责人和状态。</li>
+                  <li>为了写 PRD 再创建 Issue 或独立文档，会产生新的割裂。</li>
+                  <li>简单需求也可能被迫经过 Plan、Task、Spec。</li>
+                </ul>
+              </article>
+              <article class="card">
+                <h3>团队流程不一致</h3>
+                <ul>
+                  <li>单人团队通常直接通过 Issue 和 Agent 闭环。</li>
+                  <li>常规团队需要 Task，但不一定使用 Plan。</li>
+                  <li>只有高风险、跨团队需求需要完整的 PRD 与 Spec。</li>
+                </ul>
+              </article>
+              <article class="card">
+                <h3>角色缺少行动指引</h3>
+                <ul>
+                  <li>PM 不清楚有哪些 Issue 待梳理。</li>
+                  <li>技术负责人缺少待技术判断队列。</li>
+                  <li>研发无法快速判断哪些事项已经可以开发。</li>
+                </ul>
+              </article>
+            </div>
+          </section>
+
+          <section id="target-model">
+            <div class="section-kicker">02 · 目标模型</div>
+            <h2>一个需求只维护一份业务上下文</h2>
+            <div class="grid grid-3">
+              <article class="card">
+                <span class="card-number">简单需求</span>
+                <h3>轻量闭环</h3>
+                <div class="flow">Issue → MR → Verify</div>
+                <p class="muted">适合小 Bug、文案样式、单人产品和低风险改动。</p>
+              </article>
+              <article class="card">
+                <span class="card-number">标准需求</span>
+                <h3>常规研发</h3>
+                <div class="flow">Issue → PRD → Task/MR → Verify</div>
+                <p class="muted">适合大部分常规产品研发，可以按需拆分 Task。</p>
+              </article>
+              <article class="card">
+                <span class="card-number">复杂需求</span>
+                <h3>严格流程</h3>
+                <div class="flow">Plan → Issue → PRD → Task → Spec → MR</div>
+                <p class="muted">适合跨团队、架构、权限、数据迁移和高风险项目。</p>
+              </article>
+            </div>
+
+            <h3>对象重新定位</h3>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>对象</th><th>重新定位</th><th>不再承担</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>Issue</strong></td><td>需求入口、业务上下文、验收标准和研发链路聚合</td><td>不只是简单问题描述</td></tr>
+                  <tr><td><strong>PRD</strong></td><td>Issue 内的结构化需求说明</td><td>不再创建另一个 PRD Issue</td></tr>
+                  <tr><td><strong>Task</strong></td><td>复杂需求的执行拆分</td><td>不重复维护业务背景和验收标准</td></tr>
+                  <tr><td><strong>Spec</strong></td><td>高风险技术改动的开发门禁</td><td>不要求所有 Task 都必须有 Spec</td></tr>
+                  <tr><td><strong>Plan</strong></td><td>多个 Issue 的规划和里程碑聚合</td><td>不再作为所有开发的必经入口</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section id="roadmap">
+            <div class="section-kicker">03 · 总体规划</div>
+            <h2>四阶段完成系统收敛</h2>
+            <div class="grid grid-4">
+              <article class="card">
+                <span class="pill p0">一期 · P0</span>
+                <h3>Issue 规范化</h3>
+                <p>Issue PRD、准备度标签、待梳理队列、开发门禁。</p>
+                <strong>建议周期：5周</strong>
+              </article>
+              <article class="card">
+                <span class="pill p1">二期 · P1</span>
+                <h3>Task 去重</h3>
+                <p>Task 嵌入 Issue、我的工作、简单需求免 Task。</p>
+                <strong>建议周期：5周</strong>
+              </article>
+              <article class="card">
+                <span class="pill p1">三期 · P1</span>
+                <h3>工作流配置</h3>
+                <p>轻量/标准/严格模式、产品门禁配置、接入向导。</p>
+                <strong>建议周期：6周</strong>
+              </article>
+              <article class="card">
+                <span class="pill p2">四期 · P2</span>
+                <h3>Plan 与运营</h3>
+                <p>产品规划、交付计划、评审闭环和健康度看板。</p>
+                <strong>建议周期：6周</strong>
+              </article>
+            </div>
+
+            <div class="timeline" style="margin-top: 22px">
+              <div class="timeline-item">
+                <div class="timeline-time">一期</div>
+                <div><p class="timeline-title">先解决需求能否进入开发</p><p class="timeline-text">一个不规范 Issue 能够在同一页面被补全、确认，并安全进入开发。</p></div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-time">二期</div>
+                <div><p class="timeline-title">再解决用户在哪里完成工作</p><p class="timeline-text">研发不再在 Issue、Task、Spec 多个页面之间寻找上下文。</p></div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-time">三期</div>
+                <div><p class="timeline-title">允许产品选择适合自己的流程</p><p class="timeline-text">产线提供默认规则，产品根据团队规模和风险进行覆盖。</p></div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-time">四期</div>
+                <div><p class="timeline-title">让 Plan 回归规划和运营</p><p class="timeline-text">以 Issue 落地进度反映规划执行结果，并形成评审和复盘闭环。</p></div>
+              </div>
+            </div>
+          </section>
+
+          <section id="role-experience">
+            <div class="section-kicker">04 · 角色体验</div>
+            <h2>每个角色只看到自己下一步要做什么</h2>
+            <div class="grid grid-2">
+              <article class="card role-card"><h3>提交者</h3><ul><li>我创建的 Issue</li><li>待我补充的信息</li><li>最近的处理进度</li><li>最终交付结果</li></ul></article>
+              <article class="card role-card"><h3>PM / 产品负责人</h3><ul><li>待梳理 Issue</li><li>待完善 PRD</li><li>待产品确认</li><li>已可开发但未排期</li></ul></article>
+              <article class="card role-card"><h3>TL / 技术负责人</h3><ul><li>待技术确认</li><li>待判断 Task / Spec</li><li>缺少代码库信息</li><li>可开发但无人领取</li></ul></article>
+              <article class="card role-card"><h3>研发</h3><ul><li>分配给我的可开发事项</li><li>可以自主领取的事项</li><li>开发中与阻塞事项</li><li>MR 待处理和待验证</li></ul></article>
+            </div>
+            <p class="muted">一期优先通过工作台卡片、预设标签筛选和快捷入口实现，不立即重构全部导航。</p>
+          </section>
+
+          <section id="phase-one">
+            <div class="section-kicker">05 · 一期 PRD</div>
+            <h2>Issue 规范化与开发准备度优化</h2>
+            <div class="summary-box">
+              <h3>一期核心问题</h3>
+              <p>非 PM 创建的 Issue 信息不完整，无法直接进入开发；再创建 PRD Issue、Task 或独立文档又会造成重复。</p>
+              <strong>一期目标：让一个不规范 Issue 在同一页面完成需求补充、PRD 确认和开发条件判断。</strong>
+            </div>
+
+            <h3>一期目标</h3>
+            <ul class="checklist">
+              <li>PRD 可以直接在 Issue 内创建和维护。</li>
+              <li>复用现有 Issue 标签组表达开发准备度。</li>
+              <li>非 PM 创建的 Issue 自动进入待梳理队列。</li>
+              <li>PM 可以决定是否需要 PRD，并完成产品确认。</li>
+              <li>技术负责人可以判断 Task、Spec 和开发条件。</li>
+              <li>简单需求可以直接通过 Issue 关联 MR。</li>
+              <li>所有确认、流转和豁免行为有审计记录。</li>
+            </ul>
+
+            <h3>一期非目标</h3>
+            <div class="grid grid-2">
+              <div class="card"><ul><li>不删除 Task 页面</li><li>不重构 Plan</li><li>不要求历史 Issue 补 PRD</li><li>不迁移历史 Plan、Task、Spec</li></ul></div>
+              <div class="card"><ul><li>不建设完整工作流引擎</li><li>不支持自由表单设计器</li><li>不实现复杂多人会签</li><li>不一次性修改 Issue 状态体系</li></ul></div>
+            </div>
+          </section>
+
+          <section id="prd-entry">
+            <div class="section-kicker">06 · 一期功能</div>
+            <h2>在 Issue 内增加 PRD 入口</h2>
+            <div class="flow">概览 ｜ PRD ｜ 开发 ｜ 关联内容 ｜ 动态</div>
+            <div class="grid grid-2">
+              <article class="card">
+                <h3>简版 PRD 内容</h3>
+                <ul><li>背景</li><li>问题定义</li><li>目标</li><li>非目标</li><li>核心功能</li><li>规则与限制</li><li>验收标准</li></ul>
+              </article>
+              <article class="card">
+                <h3>PRD 状态</h3>
+                <ul><li><strong>无需 PRD：</strong>简单、明确、低风险改动</li><li><strong>草稿：</strong>内容仍在整理</li><li><strong>待确认：</strong>等待产品负责人确认</li><li><strong>已确认：</strong>可以进入后续技术判断</li></ul>
+              </article>
+            </div>
+
+            <h3>关键规则</h3>
+            <ul>
+              <li>PRD 与 Issue 1:1 关联，不产生新的 Issue。</li>
+              <li>选择“无需 PRD”必须由 PM／产品负责人操作，填写原因，并记录操作人和时间。</li>
+              <li>已确认 PRD 修改后重新进入“待确认”。</li>
+              <li>PRD 确认与豁免由 PM／产品负责人负责；技术负责人参与评审并提出修改意见，不承担产品侧确认。</li>
+              <li>一期支持结构化编辑和阅读，不建立独立 PRD 列表。</li>
+              <li>AI 可以生成草稿和缺失问题，但不能自动确认 PRD。</li>
+            </ul>
+          </section>
+
+          <section id="readiness">
+            <div class="section-kicker">07 · 一期功能</div>
+            <h2>用现有 Issue 标签组承载开发准备度</h2>
+            <p class="section-intro">开发准备度表达需求成熟程度，与 Todo、In Progress、Done 等生命周期状态相互独立。</p>
+
+            <div class="readiness" aria-label="开发准备度标签流转">
+              <div class="readiness-step"><strong>待梳理</strong><span>尚未经过产品判断，非 PM Issue 默认进入。</span></div>
+              <div class="readiness-step"><strong>待补充</strong><span>缺少场景、证据、预期结果或验收标准。</span></div>
+              <div class="readiness-step"><strong>待产品确认</strong><span>等待确认需求范围、价值和 PRD。</span></div>
+              <div class="readiness-step"><strong>待技术确认</strong><span>等待判断代码库、Task、Spec 和依赖。</span></div>
+              <div class="readiness-step ready"><strong>可开发</strong><span>上下文与门禁满足，可以领取或进入开发。</span></div>
+            </div>
+
+            <h3>默认规则</h3>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>创建场景</th><th>默认准备度</th><th>后续处理</th></tr></thead>
+                <tbody>
+                  <tr><td>非 PM 创建</td><td><span class="pill p1">待梳理</span></td><td>进入产品分诊人的待办队列</td></tr>
+                  <tr><td>PM / 产品负责人创建</td><td><span class="pill primary">待产品确认</span></td><td>补充 PRD 与验收标准后进入技术确认</td></tr>
+                  <tr><td>明确的小型 Bug</td><td><span class="pill p1">待梳理</span></td><td>PM／产品负责人可豁免 PRD，快速推进技术确认</td></tr>
+                  <tr><td>历史 Issue</td><td>保持现状</td><td>首次进入开发时提示补充，不强制批量迁移</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h3>标签组规则</h3>
+            <ul>
+              <li>标签组名称为“开发准备度”，组内单选。</li>
+              <li>作为系统保护标签组，避免与普通业务标签混用。</li>
+              <li>普通提交者不能直接标记“可开发”。</li>
+              <li>列表和详情均支持展示、筛选和授权后的快捷变更。</li>
+              <li>所有准备度变化写入 Issue 动态和审计记录。</li>
+            </ul>
+          </section>
+
+          <section id="gates">
+            <div class="section-kicker">08 · 一期功能</div>
+            <h2>建立轻量开发门禁</h2>
+            <p class="section-intro">一期采用“强提醒 + 授权角色可豁免”，避免直接阻塞现有工作。</p>
+            <div class="grid grid-2">
+              <article class="card">
+                <h3>触发检查的操作</h3>
+                <ul><li>标记 Issue 为开发中</li><li>研发领取 Issue</li><li>创建开发 Task</li><li>创建开发 MR</li><li>调用 Agent 开始开发</li></ul>
+              </article>
+              <article class="card">
+                <h3>默认可开发条件</h3>
+                <ul><li>准备度为“可开发”</li><li>有负责人或允许自主领取</li><li>验收标准明确</li><li>PRD 已确认或已豁免</li><li>技术判断已经完成</li></ul>
+              </article>
+            </div>
+            <h3>紧急豁免</h3>
+            <p>线上紧急问题允许跳过门禁，但必须选择原因、填写说明、记录操作人，并在问题处理后补充验收与复盘。</p>
+          </section>
+
+          <section id="templates">
+            <div class="section-kicker">09 · 一期功能</div>
+            <h2>产品级 Issue 模板 MVP</h2>
+            <div class="grid grid-2">
+              <article class="card"><h3>产品需求</h3><p>当前问题、目标用户、使用场景、预期结果、影响范围。</p></article>
+              <article class="card"><h3>Bug</h3><p>当前现象、复现步骤、环境版本、期望结果、影响范围。</p></article>
+              <article class="card"><h3>客户反馈</h3><p>客户场景、反馈内容、证据附件、影响范围、期望结果。</p></article>
+              <article class="card"><h3>技术优化</h3><p>当前技术问题、影响、改进收益、风险和验证方式。</p></article>
+            </div>
+            <h3>一期配置范围</h3>
+            <ul><li>模板是否启用</li><li>字段是否必填</li><li>字段提示文案</li><li>默认负责人</li><li>是否默认要求 PRD</li><li>默认开发准备度</li></ul>
+          </section>
+
+          <section id="permissions">
+            <div class="section-kicker">10 · 一期规则</div>
+            <h2>角色权限设计</h2>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>操作</th><th>提交者</th><th>PM / 产品负责人</th><th>技术负责人</th><th>研发</th><th>管理员</th></tr></thead>
+                <tbody>
+                  <tr><td>创建和补充 Issue</td><td class="status-good">允许</td><td class="status-good">允许</td><td class="status-good">允许</td><td class="status-good">允许</td><td class="status-good">允许</td></tr>
+                  <tr><td>编辑 PRD 草稿</td><td>受限</td><td class="status-good">允许</td><td>可评论</td><td>只读</td><td class="status-good">允许</td></tr>
+                  <tr><td>确认 PRD</td><td>不允许</td><td class="status-good">允许</td><td>参与评审、提出意见</td><td>不允许</td><td class="status-good">允许</td></tr>
+                  <tr><td>豁免 PRD</td><td>不允许</td><td class="status-good">允许</td><td>参与评审、提出意见</td><td>不允许</td><td class="status-good">允许</td></tr>
+                  <tr><td>推进待技术确认</td><td>不允许</td><td class="status-good">允许</td><td class="status-good">允许</td><td>不允许</td><td class="status-good">允许</td></tr>
+                  <tr><td>标记可开发</td><td>不允许</td><td>可配置</td><td class="status-good">允许</td><td>不允许</td><td class="status-good">允许</td></tr>
+                  <tr><td>领取可开发 Issue</td><td>不允许</td><td>不允许</td><td class="status-good">允许</td><td class="status-good">允许</td><td class="status-good">允许</td></tr>
+                  <tr><td>豁免开发门禁</td><td>不允许</td><td>可配置</td><td class="status-good">允许</td><td>不允许</td><td class="status-good">允许</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="muted">管理员允许执行全部操作。长期应支持产品级授权，但 PRD 的产品侧确认和豁免仍由 PM／产品负责人承担。</p>
+          </section>
+
+          <section id="acceptance">
+            <div class="section-kicker">11 · 一期验收</div>
+            <h2>一期验收标准</h2>
+            <div class="grid grid-2">
+              <article class="card">
+                <h3>PRD</h3>
+                <ul class="checklist"><li>Issue 内可创建、编辑和查看 PRD</li><li>不产生新的 PRD Issue</li><li>支持草稿、待确认、已确认、无需 PRD</li><li>确认和豁免有审计记录</li></ul>
+              </article>
+              <article class="card">
+                <h3>开发准备度</h3>
+                <ul class="checklist"><li>单选标签组正常工作</li><li>非 PM Issue 默认待梳理</li><li>列表和详情均可筛选展示</li><li>标记可开发执行条件检查</li></ul>
+              </article>
+              <article class="card">
+                <h3>角色待办</h3>
+                <ul class="checklist"><li>PM 可查看待梳理和待产品确认</li><li>TL 可查看待技术确认</li><li>研发可查看可开发事项</li><li>提交者可查看待自己补充</li></ul>
+              </article>
+              <article class="card">
+                <h3>兼容与开发入口</h3>
+                <ul class="checklist"><li>简单 Issue 可直接关联 MR</li><li>开发动作触发准备度检查</li><li>历史 Issue 和关联数据不丢失</li><li>未启用产品保持原有行为</li></ul>
+              </article>
+            </div>
+          </section>
+
+          <section id="delivery-plan">
+            <div class="section-kicker">12 · 开发计划</div>
+            <h2>一期建议实施排期</h2>
+            <div class="timeline">
+              <div class="timeline-item"><div class="timeline-time">第1周</div><div><p class="timeline-title">方案与基础模型</p><p class="timeline-text">PRD、数据模型、准备度标签、权限流转、交互原型和试点产品确认。</p></div></div>
+              <div class="timeline-item"><div class="timeline-time">第2周</div><div><p class="timeline-title">PRD 能力</p><p class="timeline-text">PRD 模型与接口、Issue PRD 页签、编辑保存、确认、豁免和审计。</p></div></div>
+              <div class="timeline-item"><div class="timeline-time">第3周</div><div><p class="timeline-title">开发准备度</p><p class="timeline-text">系统标签组、默认规则、流转校验、列表快捷操作和预设筛选。</p></div></div>
+              <div class="timeline-item"><div class="timeline-time">第4周</div><div><p class="timeline-title">开发门禁与角色入口</p><p class="timeline-text">Task/MR/Agent 前检查、豁免、角色待办和开发关联聚合。</p></div></div>
+              <div class="timeline-item"><div class="timeline-time">第5周</div><div><p class="timeline-title">联调与灰度</p><p class="timeline-text">兼容验证、权限验证、试点灰度、数据埋点、文档和反馈收集。</p></div></div>
+            </div>
+
+            <h3>灰度策略</h3>
+            <div class="grid grid-3">
+              <article class="card"><h4>轻量产品</h4><p class="muted">验证 Issue → MR 是否真正降低单人团队使用成本。</p></article>
+              <article class="card"><h4>标准团队</h4><p class="muted">验证 Issue → PRD → Task/MR 是否减少重复录入。</p></article>
+              <article class="card"><h4>管理较混乱团队</h4><p class="muted">验证待梳理队列和模板是否提升 Issue 完整率。</p></article>
+            </div>
+          </section>
+
+          <section id="metrics">
+            <div class="section-kicker">13 · 效果评估</div>
+            <h2>一期核心指标</h2>
+            <div class="grid grid-2">
+              <article class="card"><h3>业务指标</h3><ul><li>非 PM Issue 信息完整率</li><li>创建到首次梳理的平均时间</li><li>待梳理超过两个工作日的比例</li><li>因需求不清被退回的比例</li><li>有验收标准的开发中 Issue 比例</li></ul></article>
+              <article class="card"><h3>体验指标</h3><ul><li>获取完整上下文的页面跳转次数</li><li>Issue 到开发的平均操作步骤</li><li>PM 梳理一个 Issue 的平均耗时</li><li>用户对“下一步做什么”的理解度</li><li>Issue、Task、Plan 重复录入次数</li></ul></article>
+            </div>
+          </section>
+
+          <section id="decisions">
+            <div class="section-kicker">14 · 汇报决策</div>
+            <h2>需要确认的四个方向</h2>
+            <ol>
+              <li><strong>是否认可 Issue 成为唯一需求入口和业务上下文中心。</strong></li>
+              <li><strong>是否认可 PRD 内嵌 Issue，而不是创建新的 PRD Issue。</strong></li>
+              <li><strong>是否认可 Task、Spec、Plan 根据需求复杂度按需使用。</strong></li>
+              <li><strong>是否认可不同产品最终可以配置不同工作流。</strong></li>
+            </ol>
+            <div class="decision" style="margin-top: 24px">
+              一期不推翻现有流程，而是先用最低成本补齐 Issue 的需求质量和进入开发能力；通过产品灰度验证效果，再逐步完成系统去重与工作流重构。
+            </div>
+          </section>
+
+          <div class="footer">DevBoard 总体迭代规划与一期优化 PRD · 2026-08-21</div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>
